@@ -1,10 +1,13 @@
 import time
 import requests
 import re
+import os
+import json
 from dataclasses import dataclass
 from typing import Optional, List, Dict
 from bs4 import BeautifulSoup
 from datetime import datetime
+from dataclasses import asdict
 
 @dataclass
 class GigData:
@@ -154,7 +157,7 @@ def parse_faq(soup: BeautifulSoup) -> List[Dict[str, str]]:
 
 def scrape_gig(url: str) -> GigData:
     headers = {
-        "User-Agent": "Mozilla/5.0",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         "Accept-Language": "en-US,en;q=0.9",
     }
     time.sleep(6)
@@ -191,3 +194,35 @@ def scrape_gig(url: str) -> GigData:
         faqs=faqs,
         snapshot_time=snapshot_time
     )
+
+def print_gig_pretty(gig: GigData):
+    print(
+        json.dumps(
+            asdict(gig),
+            indent=2,
+            ensure_ascii=False
+        )
+    )
+
+JSON_FILE = "gigs.json"
+
+def save_gig_to_json(gig: GigData):
+    data = []
+
+    if os.path.exists(JSON_FILE):
+        with open(JSON_FILE, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+            except json.JSONDecodeError:
+                data = []
+
+    data.append(asdict(gig))
+
+    with open(JSON_FILE, "w", encoding="utf-8") as f:
+        json.dump(
+            data,
+            f,
+            indent=2,
+            ensure_ascii=False
+        )
+
